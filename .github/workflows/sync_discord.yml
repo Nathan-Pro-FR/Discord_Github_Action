@@ -24,11 +24,43 @@ jobs:
       - name: Install dependencies
         run: npm install --no-audit --no-fund
 
+      - name: Backup previous donnees.json
+        run: |
+          if [ -f donnees.json ]; then
+            cp donnees.json donnees.previous.json
+          else
+            echo "[]" > donnees.previous.json
+          fi
+
       - name: Fetch Discord media and update data
         env:
           DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
           CHANNEL_ID: ${{ secrets.CHANNEL_ID }}
         run: node recupere_medias.js
+
+      - name: Compute sync stats
+        id: stats
+        run: |
+          node -e "const fs=require('node:fs'); const oldData=JSON.parse(fs.readFileSync('donnees.previous.json','utf8')); const newData=JSON.parse(fs.readFileSync('donnees.json','utf8')); const oldSet=new Set(oldData); const newSet=new Set(newData); let added=0; let removed=0; for (const u of newSet) if (!oldSet.has(u)) added++; for (const u of oldSet) if (!newSet.has(u)) removed++; const changed=added+removed; const now=new Date(); fs.appendFileSync(process.env.GITHUB_OUTPUT, 'added='+added+'\n'); fs.appendFileSync(process.env.GITHUB_OUTPUT, 'removed='+removed+'\n'); fs.appendFileSync(process.env.GITHUB_OUTPUT, 'changed='+changed+'\n'); fs.appendFileSync(process.env.GITHUB_OUTPUT, 'total='+newData.length+'\n'); fs.appendFileSync(process.env.GITHUB_OUTPUT, 'timestamp='+now.toISOString()+'\n');"
+
+      - name: Notify Discord sync result
+        if: always()
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          ADDED: ${{ steps.stats.outputs.added }}
+          REMOVED: ${{ steps.stats.outputs.removed }}
+          CHANGED: ${{ steps.stats.outputs.changed }}
+          TOTAL: ${{ steps.stats.outputs.total }}
+          TIMESTAMP: ${{ steps.stats.outputs.timestamp }}
+        run: |
+          if [ -z "${DISCORD_WEBHOOK_URL}" ]; then
+            echo "DISCORD_WEBHOOK_URL not set, skipping notification."
+            exit 0
+          fi
+
+          MESSAGE="🔄 Sync galerie terminee | Changements: ${CHANGED} (ajoutes: ${ADDED}, supprimes: ${REMOVED}) | Total medias: ${TOTAL} | Date UTC: ${TIMESTAMP}"
+          PAYLOAD=$(printf '{"content":"%s"}' "$(printf '%s' "${MESSAGE}" | sed 's/"/\\"/g')")
+          curl -sS -H "Content-Type: application/json" -d "${PAYLOAD}" "${DISCORD_WEBHOOK_URL}"
 
       - name: Commit and push updated donnees.json
         run: |
