@@ -41,7 +41,34 @@ jobs:
       - name: Compute sync stats
         id: stats
         run: |
-          node -e "const fs=require('node:fs'); const oldData=JSON.parse(fs.readFileSync('donnees.previous.json','utf8')); const newData=JSON.parse(fs.readFileSync('donnees.json','utf8')); const oldSet=new Set(oldData); const newSet=new Set(newData); let added=0; let removed=0; for (const u of newSet) if (!oldSet.has(u)) added++; for (const u of oldSet) if (!newSet.has(u)) removed++; const changed=added+removed; const now=new Date(); fs.appendFileSync(process.env.GITHUB_OUTPUT, 'added='+added+'\n'); fs.appendFileSync(process.env.GITHUB_OUTPUT, 'removed='+removed+'\n'); fs.appendFileSync(process.env.GITHUB_OUTPUT, 'changed='+changed+'\n'); fs.appendFileSync(process.env.GITHUB_OUTPUT, 'total='+newData.length+'\n'); fs.appendFileSync(process.env.GITHUB_OUTPUT, 'timestamp='+now.toISOString()+'\n');"
+          node <<'NODE'
+          const fs = require("node:fs");
+          const oldData = JSON.parse(fs.readFileSync("donnees.previous.json", "utf8"));
+          const newData = JSON.parse(fs.readFileSync("donnees.json", "utf8"));
+          const oldSet = new Set(oldData);
+          const newSet = new Set(newData);
+
+          let added = 0;
+          let removed = 0;
+
+          for (const url of newSet) {
+            if (!oldSet.has(url)) added++;
+          }
+          for (const url of oldSet) {
+            if (!newSet.has(url)) removed++;
+          }
+
+          const changed = added + removed;
+          const now = new Date();
+          const unixTs = Math.floor(now.getTime() / 1000);
+
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, `added=${added}\n`);
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, `removed=${removed}\n`);
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, `changed=${changed}\n`);
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, `total=${newData.length}\n`);
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, `timestamp=${now.toISOString()}\n`);
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, `timestamp_unix=${unixTs}\n`);
+          NODE
 
       - name: Notify Discord sync result
         if: always()
@@ -52,15 +79,68 @@ jobs:
           CHANGED: ${{ steps.stats.outputs.changed }}
           TOTAL: ${{ steps.stats.outputs.total }}
           TIMESTAMP: ${{ steps.stats.outputs.timestamp }}
+          TIMESTAMP_UNIX: ${{ steps.stats.outputs.timestamp_unix }}
+          REPO_URL: ${{ github.server_url }}/${{ github.repository }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          SITE_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/
         run: |
           if [ -z "${DISCORD_WEBHOOK_URL}" ]; then
             echo "DISCORD_WEBHOOK_URL not set, skipping notification."
             exit 0
           fi
 
-          MESSAGE="🔄 Sync galerie terminee | Changements: ${CHANGED} (ajoutes: ${ADDED}, supprimes: ${REMOVED}) | Total medias: ${TOTAL} | Date UTC: ${TIMESTAMP}"
-          PAYLOAD=$(printf '{"content":"%s"}' "$(printf '%s' "${MESSAGE}" | sed 's/"/\\"/g')")
-          curl -sS -H "Content-Type: application/json" -d "${PAYLOAD}" "${DISCORD_WEBHOOK_URL}"
+          node <<'NODE'
+          const webhookUrl = process.env.DISCORD_WEBHOOK_URL;
+          const added = Number(process.env.ADDED || 0);
+          const removed = Number(process.env.REMOVED || 0);
+          const changed = Number(process.env.CHANGED || 0);
+          const total = Number(process.env.TOTAL || 0);
+          const timestamp = process.env.TIMESTAMP || new Date().toISOString();
+          const unixTs = Number(process.env.TIMESTAMP_UNIX || Math.floor(Date.now() / 1000));
+          const repoUrl = process.env.REPO_URL;
+          const runUrl = process.env.RUN_URL;
+          const siteUrl = process.env.SITE_URL;
+
+          const color = changed > 0 ? 0x22c55e : 0x6b7280;
+          const statusLabel = changed > 0 ? "Mise a jour detectee" : "Aucun changement";
+
+          const payload = {
+            username: "Gallery Sync Bot",
+            embeds: [
+              {
+                title: "Synchronisation galerie Discord",
+                description: `**${statusLabel}**\n🕒 <t:${unixTs}:F> • <t:${unixTs}:R>`,
+                color,
+                fields: [
+                  { name: "Changements (X)", value: `**${changed}**`, inline: true },
+                  { name: "Ajoutes", value: String(added), inline: true },
+                  { name: "Supprimes", value: String(removed), inline: true },
+                  { name: "Total medias", value: String(total), inline: true },
+                  { name: "Site", value: `[Ouvrir la galerie](${siteUrl})`, inline: false },
+                  { name: "Workflow run", value: `[Voir l'execution](${runUrl})`, inline: false }
+                ],
+                footer: {
+                  text: `Repo: ${repoUrl} • UTC: ${timestamp}`
+                }
+              }
+            ]
+          };
+
+          fetch(webhookUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          }).then(async (response) => {
+            if (!response.ok) {
+              const body = await response.text();
+              throw new Error(`Discord webhook error ${response.status}: ${body}`);
+            }
+            console.log("Discord notification sent.");
+          }).catch((error) => {
+            console.error(error);
+            process.exit(1);
+          });
+          NODE
 
       - name: Commit and push updated donnees.json
         run: |
