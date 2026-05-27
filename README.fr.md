@@ -36,6 +36,31 @@ Une galerie media legere au style Cyberpunk / Dark Neon, synchronisee automatiqu
 
 La galerie sera ensuite mise a jour automatiquement.
 
+## Ou mettre `DISCORD_TOKEN` et `CHANNEL_ID` ?
+
+Tu dois les ajouter dans les **Secrets GitHub Actions** de ton depot (et nulle part ailleurs).
+
+### Etapes pas a pas
+
+1. Ouvre ton depot sur GitHub.
+2. Va dans `Settings`.
+3. Clique `Secrets and variables` -> `Actions`.
+4. Clique `New repository secret`.
+5. Cree ces 2 secrets :
+   - **Name**: `DISCORD_TOKEN`  
+     **Secret**: le token de ton bot Discord
+   - **Name**: `CHANNEL_ID`  
+     **Secret**: l'identifiant du salon Discord
+6. Lance le workflow `Sync Discord Media` manuellement une premiere fois depuis l'onglet `Actions`.
+
+### Important
+
+- Ne mets jamais ces valeurs dans `recupere_medias.js`, `package.json`, `donnees.json` ou un commit Git.
+- Le workflow les lit automatiquement via :
+  - `${{ secrets.DISCORD_TOKEN }}`
+  - `${{ secrets.CHANNEL_ID }}`
+- En cas de fuite du token, regenere-le immediatement dans Discord Developer Portal.
+
 ## Apercu visuel
 
 Ajoute une image ou un GIF dans :

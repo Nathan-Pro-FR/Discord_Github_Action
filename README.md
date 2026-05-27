@@ -36,6 +36,31 @@ A lightweight Cyberpunk / Dark Neon media gallery powered by Discord + GitHub Ac
 
 Your gallery is now live and will refresh automatically.
 
+## Where to put `DISCORD_TOKEN` and `CHANNEL_ID`?
+
+You must add them in your repository **GitHub Actions Secrets** (and nowhere else).
+
+### Step-by-step
+
+1. Open your repository on GitHub.
+2. Go to `Settings`.
+3. Click `Secrets and variables` -> `Actions`.
+4. Click `New repository secret`.
+5. Create these 2 secrets:
+   - **Name**: `DISCORD_TOKEN`  
+     **Secret**: your Discord bot token
+   - **Name**: `CHANNEL_ID`  
+     **Secret**: your Discord channel ID
+6. Run the `Sync Discord Media` workflow manually once from the `Actions` tab.
+
+### Important
+
+- Never put these values in `recupere_medias.js`, `package.json`, `donnees.json`, or any Git commit.
+- The workflow reads them automatically via:
+  - `${{ secrets.DISCORD_TOKEN }}`
+  - `${{ secrets.CHANNEL_ID }}`
+- If the token is leaked, rotate it immediately from Discord Developer Portal.
+
 ## Preview
 
 Add your screenshot or GIF here:
