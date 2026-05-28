@@ -116,9 +116,9 @@ body {
   z-index: 1;
   width: 100%;
   aspect-ratio: 4 / 3;
-  object-fit: cover;
+  object-fit: contain;
   display: block;
-  background: #080810;
+  background: color-mix(in srgb, var(--neon-pink) 15%, #050508); 
 }
 
 .site-footer {
