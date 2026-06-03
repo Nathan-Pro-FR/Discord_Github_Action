@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cyber-Core Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --bg-main: #050508;
+      --bg-card: #0d0d17;
+      --neon-pink: #ec4899;
+      --neon-blue: #00f0ff;
+      --neon-green: #39ff14;
+      --neon-red: #ff3131;
+      --text-main: #f4f4ff;
+      --text-dim: #a2a2c6;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-main);
+      color: var(--text-main);
+      font-family: "Rajdhani", sans-serif;
+      min-height: 100vh;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    header {
+      text-align: center;
+      padding: 10px 0;
+      border-bottom: 2px dashed rgba(0, 240, 255, 0.3);
+    }
+
+    h1 {
+      font-family: "Orbitron", sans-serif;
+      font-size: 1.6rem;
+      color: var(--neon-blue);
+      text-shadow: 0 0 10px rgba(0, 240, 255, 0.6);
+      letter-spacing: 2px;
+    }
+
+    .grid {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid rgba(236, 72, 153, 0.2);
+      border-radius: 12px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      box-shadow: inset 0 0 15px rgba(236, 72, 153, 0.05);
+    }
+
+    .card-title {
+      font-family: "Orbitron", sans-serif;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      letter-spacing: 1px;
+    }
+
+    .card-value {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--neon-pink);
+      text-shadow: 0 0 8px rgba(236, 72, 153, 0.4);
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 1.2rem;
+      font-weight: bold;
+    }
+
+    .status-online {
+      color: var(--neon-green);
+      text-shadow: 0 0 8px rgba(57, 255, 20, 0.4);
+    }
+
+    .status-loading {
+      color: var(--neon-blue);
+      animation: pulse 1.5s infinite;
+    }
+
+    .btn-refresh {
+      background: transparent;
+      border: 1px solid var(--neon-blue);
+      color: var(--neon-blue);
+      font-family: "Orbitron", sans-serif;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      text-transform: uppercase;
+      transition: all 0.2s;
+      margin-top: auto;
+      text-shadow: 0 0 5px rgba(0, 240, 255, 0.5);
+      box-shadow: 0 0 10px rgba(0, 240, 255, 0.1);
+    }
+
+    .btn-refresh:active {
+      background: rgba(0, 240, 255, 0.2);
+      transform: scale(0.98);
+    }
+
+    .footer-info {
+      text-align: center;
+      font-size: 0.8rem;
+      color: var(--text-dim);
+      margin-top: 10px;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 0.6; }
+      50% { opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>CYBER-CORE MONITOR</h1>
+  </header>
+
+  <main class="grid">
+    <div class="card">
+      <div class="card-title">📊 Médias Synchronisés</div>
+      <div class="card-value" id="media-count">--</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🌐 Statut Galerie Web</div>
+      <div class="status-badge status-online">✅ OPÉRATIONNEL</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🤖 Robot de Synchronisation</div>
+      <div id="bot-status" class="status-badge status-loading">⏳ ANALYSE...</div>
+    </div>
+  </main>
+
+  <button class="btn-refresh" onclick="updateDashboard()">🔄 Rafraîchir</button>
+  
+  <div class="footer-info">Système connecté à la base de données JSON</div>
+
+  <script>
+    // CONFIGURATION AUTOMATIQUE (Remplace par tes infos pour le statut du bot)
+    const GITHUB_USERNAME = "Nathan-Pro-FR";           // Écris ton pseudo GitHub ici
+    const GITHUB_REPO = "Discord_Github_Action";       // Écris le nom de ton dépôt ici
+
+    async function updateDashboard() {
+      // 1. Récupération du nombre de médias
+      try {
+        document.getElementById('media-count').innerText = "⏳";
+        const res = await fetch('donnees.json', { cache: 'no-store' });
+        if (res.ok) {
+          const data = await res.json();
+          document.getElementById('media-count').innerText = Array.isArray(data) ? data.length : "0";
+        } else {
+          document.getElementById('media-count').innerText = "ERR";
+        }
+      } catch (err) {
+        document.getElementById('media-count').innerText = "ERR";
+      }
+
+      // 2. Récupération du statut du Bot via l'API publique de GitHub Actions
+      try {
+        const botStatusEl = document.getElementById('bot-status');
+        botStatusEl.className = "status-badge status-loading";
+        botStatusEl.innerText = "⏳ VÉRIFICATION...";
+
+        const githubUrl = `https://api.github.com/repos/${GITHUB_USERNAME}/${GITHUB_REPO}/actions/runs?limit=1`;
+        const res = await fetch(githubUrl);
+        
+        if (res.ok) {
+          const apiData = await res.json();
+          if (apiData.workflow_runs && apiData.workflow_runs.length > 0) {
+            const lastRun = apiData.workflow_runs[0];
+            
+            if (lastRun.status === "completed") {
+              if (lastRun.conclusion === "success") {
+                botStatusEl.className = "status-badge";
+                botStatusEl.style.color = "var(--neon-green)";
+                botStatusEl.innerText = "✅ ACTIF (RÉUSSI)";
+              } else {
+                botStatusEl.className = "status-badge";
+                botStatusEl.style.color = "var(--neon-red)";
+                botStatusEl.innerText = "❌ ERREUR ACTION";
+              }
+            } else {
+              botStatusEl.className = "status-badge status-loading";
+              botStatusEl.style.color = "var(--neon-blue)";
+              botStatusEl.innerText = "🔄 EN TRAIN DE TOURNER";
+            }
+          } else {
+            botStatusEl.innerText = "❓ AUCUN RUN";
+          }
+        } else {
+          botStatusEl.innerText = "🔒 ACCÈS LIMITÉ";
+        }
+      } catch (e) {
+        document.getElementById('bot-status').innerText = "ERR APi";
+      }
+    }
+
+    // Lancement automatique au chargement de la page
+    window.addEventListener('DOMContentLoaded', updateDashboard);
+  </script>
+</body>
+</html>
