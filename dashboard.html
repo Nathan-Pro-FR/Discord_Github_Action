@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cyber-Core Dashboard</title>
+  <title>Cyber-Core Advanced Dashboard</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
@@ -16,6 +16,7 @@
       --neon-blue: #00f0ff;
       --neon-green: #39ff14;
       --neon-red: #ff3131;
+      --neon-amber: #ffaa00;
       --text-main: #f4f4ff;
       --text-dim: #a2a2c6;
     }
@@ -31,10 +32,10 @@
       color: var(--text-main);
       font-family: "Rajdhani", sans-serif;
       min-height: 100vh;
-      padding: 20px;
+      padding: 15px;
       display: flex;
       flex-direction: column;
-      gap: 20px;
+      gap: 15px;
     }
 
     header {
@@ -45,7 +46,7 @@
 
     h1 {
       font-family: "Orbitron", sans-serif;
-      font-size: 1.6rem;
+      font-size: 1.4rem;
       color: var(--neon-blue);
       text-shadow: 0 0 10px rgba(0, 240, 255, 0.6);
       letter-spacing: 2px;
@@ -54,40 +55,74 @@
     .grid {
       display: flex;
       flex-direction: column;
-      gap: 15px;
+      gap: 12px;
     }
 
     .card {
       background: var(--bg-card);
       border: 1px solid rgba(236, 72, 153, 0.2);
       border-radius: 12px;
-      padding: 20px;
+      padding: 15px;
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 8px;
       box-shadow: inset 0 0 15px rgba(236, 72, 153, 0.05);
     }
 
     .card-title {
       font-family: "Orbitron", sans-serif;
-      font-size: 0.9rem;
+      font-size: 0.85rem;
       text-transform: uppercase;
       color: var(--text-dim);
       letter-spacing: 1px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      padding-bottom: 4px;
     }
 
     .card-value {
-      font-size: 2rem;
+      font-size: 1.8rem;
       font-weight: 700;
       color: var(--neon-pink);
       text-shadow: 0 0 8px rgba(236, 72, 153, 0.4);
     }
 
+    /* System Stats Layout */
+    .wf-stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 5px;
+      text-align: center;
+      margin-top: 5px;
+    }
+
+    .wf-stat-box {
+      background: rgba(255, 255, 255, 0.02);
+      padding: 6px;
+      border-radius: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .wf-stat-label {
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      text-transform: uppercase;
+    }
+
+    .wf-stat-num {
+      font-family: "Orbitron", sans-serif;
+      font-size: 1.1rem;
+      font-weight: bold;
+    }
+
+    .color-success { color: var(--neon-green); text-shadow: 0 0 5px rgba(57,255,20,0.3); }
+    .color-error { color: var(--neon-red); text-shadow: 0 0 5px rgba(255,49,49,0.3); }
+    .color-rate { color: var(--neon-blue); text-shadow: 0 0 5px rgba(0,240,255,0.3); }
+
     .status-badge {
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      font-size: 1.2rem;
+      font-size: 1.1rem;
       font-weight: bold;
     }
 
@@ -106,14 +141,14 @@
       border: 1px solid var(--neon-blue);
       color: var(--neon-blue);
       font-family: "Orbitron", sans-serif;
-      padding: 12px;
+      padding: 14px;
       border-radius: 8px;
       font-size: 1rem;
       font-weight: bold;
       cursor: pointer;
       text-transform: uppercase;
       transition: all 0.2s;
-      margin-top: auto;
+      margin-top: 10px;
       text-shadow: 0 0 5px rgba(0, 240, 255, 0.5);
       box-shadow: 0 0 10px rgba(0, 240, 255, 0.1);
     }
@@ -125,9 +160,9 @@
 
     .footer-info {
       text-align: center;
-      font-size: 0.8rem;
+      font-size: 0.75rem;
       color: var(--text-dim);
-      margin-top: 10px;
+      margin-top: 5px;
     }
 
     @keyframes pulse {
@@ -139,37 +174,132 @@
 <body>
 
   <header>
-    <h1>CYBER-CORE MONITOR</h1>
+    <h1>CYBER-CORE MONITOR v2</h1>
   </header>
 
   <main class="grid">
     <div class="card">
-      <div class="card-title">📊 Médias Synchronisés</div>
-      <div class="card-value" id="media-count">--</div>
+      <div class="card-title">📊 Base Globale</div>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-top:5px;">
+        <div>
+          <span style="color:var(--text-dim); font-size:0.9rem;">Médias :</span>
+          <span class="card-value" id="media-count" style="margin-left:5px;">--</span>
+        </div>
+        <div class="status-badge status-online">✅ SITE WEB LIVE</div>
+      </div>
     </div>
 
-    <div class="card">
-      <div class="card-title">🌐 Statut Galerie Web</div>
-      <div class="status-badge status-online">✅ OPÉRATIONNEL</div>
+    <div class="card" id="wf-sync">
+      <div class="card-title">🤖 1. Sync Discord Media</div>
+      <div class="wf-stats-grid">
+        <div class="wf-stat-box"><div class="wf-stat-label">Réussis</div><div class="wf-stat-num color-success" id="sync-success">--</div></div>
+        <div class="wf-stat-box"><div class="wf-stat-label">Échecs</div><div class="wf-stat-num color-error" id="sync-failed">--</div></div>
+        <div class="wf-stat-box"><div class="wf-stat-label">% Succès</div><div class="wf-stat-num color-rate" id="sync-rate">--</div></div>
+      </div>
     </div>
 
-    <div class="card">
-      <div class="card-title">🤖 Robot de Synchronisation</div>
-      <div id="bot-status" class="status-badge status-loading">⏳ ANALYSE...</div>
+    <div class="card" id="wf-pages">
+      <div class="card-title">🚀 2. Pages Build Deployment</div>
+      <div class="wf-stats-grid">
+        <div class="wf-stat-box"><div class="wf-stat-label">Réussis</div><div class="wf-stat-num color-success" id="pages-success">--</div></div>
+        <div class="wf-stat-box"><div class="wf-stat-label">Échecs</div><div class="wf-stat-num color-error" id="pages-failed">--</div></div>
+        <div class="wf-stat-box"><div class="wf-stat-label">% Succès</div><div class="wf-stat-num color-rate" id="pages-rate">--</div></div>
+      </div>
+    </div>
+
+    <div class="card" id="wf-codeql">
+      <div class="card-title">🛡️ 3. CodeQL (Analyse Sécurité)</div>
+      <div class="wf-stats-grid">
+        <div class="wf-stat-box"><div class="wf-stat-label">Réussis</div><div class="wf-stat-num color-success" id="codeql-success">--</div></div>
+        <div class="wf-stat-box"><div class="wf-stat-label">Échecs</div><div class="wf-stat-num color-error" id="codeql-failed">--</div></div>
+        <div class="wf-stat-box"><div class="wf-stat-label">% Succès</div><div class="wf-stat-num color-rate" id="codeql-rate">--</div></div>
+      </div>
+    </div>
+
+    <div class="card" id="wf-dependabot">
+      <div class="card-title">📦 4. Dependabot Updates</div>
+      <div class="wf-stats-grid">
+        <div class="wf-stat-box"><div class="wf-stat-label">Réussis</div><div class="wf-stat-num color-success" id="dep-success">--</div></div>
+        <div class="wf-stat-box"><div class="wf-stat-label">Échecs</div><div class="wf-stat-num color-error" id="dep-failed">--</div></div>
+        <div class="wf-stat-box"><div class="wf-stat-label">% Succès</div><div class="wf-stat-num color-rate" id="dep-rate">--</div></div>
+      </div>
     </div>
   </main>
 
-  <button class="btn-refresh" onclick="updateDashboard()">🔄 Rafraîchir</button>
+  <button class="btn-refresh" onclick="updateDashboard()">⚡ Calculer les Flux</button>
   
-  <div class="footer-info">Système connecté à la base de données JSON</div>
+  <div class="footer-info">Données extraites en temps réel via l'API REST de GitHub</div>
 
   <script>
-    // CONFIGURATION AUTOMATIQUE (Remplace par tes infos pour le statut du bot)
-    const GITHUB_USERNAME = "Nathan-Pro-FR";           // Écris ton pseudo GitHub ici
-    const GITHUB_REPO = "Discord_Github_Action";       // Écris le nom de ton dépôt ici
+    // Configurer avec tes informations exactes
+    const GITHUB_USERNAME = "Nathan-Pro-FR";           // Mets ton pseudo GitHub ici
+    const GITHUB_REPO = "Discord_Github_Action";       // Mets le nom de ton dépôt ici
+
+    // Liste des fichiers ou noms de workflows à analyser
+    const WORKFLOW_FILES = {
+      sync: "sync_discord.yml",
+      pages: "pages-build-deployment", // Nom automatique par défaut de GitHub Pages
+      codeql: "codeql.yml",            // S'il existe dans ton dossier .github/workflows/
+      dependabot: "dependabot"         // Gère les updates automatiques de dépendances
+    };
+
+    async function fetchWorkflowStats(workflowIdOrFile, successId, failedId, rateId) {
+      try {
+        // Demande les 30 derniers lancements pour avoir un échantillon statistique fiable
+        const url = `https://api.github.com/repos/${GITHUB_USERNAME}/${GITHUB_REPO}/actions/workflows/${workflowIdOrFile}/runs?per_page=200`;
+        const res = await fetch(url);
+        
+        if (!res.ok) {
+          document.getElementById(successId).innerText = "N/A";
+          document.getElementById(failedId).innerText = "N/A";
+          document.getElementById(rateId).innerText = "N/A";
+          return;
+        }
+
+        const data = await res.json();
+        const runs = data.workflow_runs || [];
+
+        if (runs.length === 0) {
+          document.getElementById(successId).innerText = "0";
+          document.getElementById(failedId).innerText = "0";
+          document.getElementById(rateId).innerText = "0%";
+          return;
+        }
+
+        let successCount = 0;
+        let failedCount = 0;
+        let countedRuns = 0;
+
+        runs.forEach(run => {
+          // On ne prend en compte que les runs qui ont fini de tourner
+          if (run.status === "completed") {
+            countedRuns++;
+            if (run.conclusion === "success") {
+              successCount++;
+            } else if (run.conclusion === "failure") {
+              failedCount++;
+            }
+          }
+        });
+
+        // Calcul du pourcentage de réussite
+        const totalConclusive = successCount + failedCount;
+        const rate = totalConclusive > 0 ? Math.round((successCount / totalConclusive) * 100) : 100;
+
+        document.getElementById(successId).innerText = successCount;
+        document.getElementById(failedId).innerText = failedCount;
+        document.getElementById(rateId).innerText = `${rate}%`;
+
+      } catch (err) {
+        console.error(err);
+        document.getElementById(successId).innerText = "ERR";
+        document.getElementById(failedId).innerText = "ERR";
+        document.getElementById(rateId).innerText = "ERR";
+      }
+    }
 
     async function updateDashboard() {
-      // 1. Récupération du nombre de médias
+      // 1. Charger le compteur de médias local (donnees.json)
       try {
         document.getElementById('media-count').innerText = "⏳";
         const res = await fetch('donnees.json', { cache: 'no-store' });
@@ -183,47 +313,16 @@
         document.getElementById('media-count').innerText = "ERR";
       }
 
-      // 2. Récupération du statut du Bot via l'API publique de GitHub Actions
-      try {
-        const botStatusEl = document.getElementById('bot-status');
-        botStatusEl.className = "status-badge status-loading";
-        botStatusEl.innerText = "⏳ VÉRIFICATION...";
-
-        const githubUrl = `https://api.github.com/repos/${GITHUB_USERNAME}/${GITHUB_REPO}/actions/runs?limit=1`;
-        const res = await fetch(githubUrl);
-        
-        if (res.ok) {
-          const apiData = await res.json();
-          if (apiData.workflow_runs && apiData.workflow_runs.length > 0) {
-            const lastRun = apiData.workflow_runs[0];
-            
-            if (lastRun.status === "completed") {
-              if (lastRun.conclusion === "success") {
-                botStatusEl.className = "status-badge";
-                botStatusEl.style.color = "var(--neon-green)";
-                botStatusEl.innerText = "✅ ACTIF (RÉUSSI)";
-              } else {
-                botStatusEl.className = "status-badge";
-                botStatusEl.style.color = "var(--neon-red)";
-                botStatusEl.innerText = "❌ ERREUR ACTION";
-              }
-            } else {
-              botStatusEl.className = "status-badge status-loading";
-              botStatusEl.style.color = "var(--neon-blue)";
-              botStatusEl.innerText = "🔄 EN TRAIN DE TOURNER";
-            }
-          } else {
-            botStatusEl.innerText = "❓ AUCUN RUN";
-          }
-        } else {
-          botStatusEl.innerText = "🔒 ACCÈS LIMITÉ";
-        }
-      } catch (e) {
-        document.getElementById('bot-status').innerText = "ERR APi";
-      }
+      // 2. Lancer l'analyse en parallèle pour les 4 Workflows distincts
+      await Promise.all([
+        fetchWorkflowStats(WORKFLOW_FILES.sync, "sync-success", "sync-failed", "sync-rate"),
+        fetchWorkflowStats(WORKFLOW_FILES.pages, "pages-success", "pages-failed", "pages-rate"),
+        fetchWorkflowStats(WORKFLOW_FILES.codeql, "codeql-success", "codeql-failed", "codeql-rate"),
+        fetchWorkflowStats(WORKFLOW_FILES.dependabot, "dep-success", "dep-failed", "dep-rate")
+      ]);
     }
 
-    // Lancement automatique au chargement de la page
+    // Chargement automatique
     window.addEventListener('DOMContentLoaded', updateDashboard);
   </script>
 </body>
