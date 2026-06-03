@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cyber-Core Advanced Dashboard</title>
+  <title>Cyber-Core Total Analyzer Dashboard</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
@@ -16,7 +16,6 @@
       --neon-blue: #00f0ff;
       --neon-green: #39ff14;
       --neon-red: #ff3131;
-      --neon-amber: #ffaa00;
       --text-main: #f4f4ff;
       --text-dim: #a2a2c6;
     }
@@ -46,7 +45,7 @@
 
     h1 {
       font-family: "Orbitron", sans-serif;
-      font-size: 1.4rem;
+      font-size: 1.3rem;
       color: var(--neon-blue);
       text-shadow: 0 0 10px rgba(0, 240, 255, 0.6);
       letter-spacing: 2px;
@@ -86,7 +85,6 @@
       text-shadow: 0 0 8px rgba(236, 72, 153, 0.4);
     }
 
-    /* System Stats Layout */
     .wf-stats-grid {
       display: grid;
       grid-template-columns: 1fr 1fr 1fr;
@@ -174,7 +172,7 @@
 <body>
 
   <header>
-    <h1>CYBER-CORE MONITOR v2</h1>
+    <h1>CYBER-CORE HISTORIC v2</h1>
   </header>
 
   <main class="grid">
@@ -226,38 +224,61 @@
     </div>
   </main>
 
-  <button class="btn-refresh" onclick="updateDashboard()">⚡ Calculer les Flux</button>
+  <button class="btn-refresh" onclick="updateDashboard()">⚡ Scanner l'Historique Total</button>
   
-  <div class="footer-info">Données extraites en temps réel via l'API REST de GitHub</div>
+  <div class="footer-info">Calcul complet de l'historique par boucle de pagination</div>
 
   <script>
     // Configurer avec tes informations exactes
-    const GITHUB_USERNAME = "Nathan-Pro-FR";           // Mets ton pseudo GitHub ici
+    const GITHUB_USERNAME = "Nathan-Pro-FR"; // Mets ton pseudo GitHub ici
     const GITHUB_REPO = "Discord_Github_Action";       // Mets le nom de ton dépôt ici
 
-    // Liste des fichiers ou noms de workflows à analyser
     const WORKFLOW_FILES = {
       sync: "sync_discord.yml",
-      pages: "pages-build-deployment", // Nom automatique par défaut de GitHub Pages
-      codeql: "codeql.yml",            // S'il existe dans ton dossier .github/workflows/
-      dependabot: "dependabot"         // Gère les updates automatiques de dépendances
+      pages: "pages-build-deployment", 
+      codeql: "codeql.yml",            
+      dependabot: "dependabot"         
     };
 
-    async function fetchWorkflowStats(workflowIdOrFile, successId, failedId, rateId) {
-      try {
-        // Demande les 30 derniers lancements pour avoir un échantillon statistique fiable
-        const url = `https://api.github.com/repos/${GITHUB_USERNAME}/${GITHUB_REPO}/actions/workflows/${workflowIdOrFile}/runs?per_page=200`;
+    // Fonction de boucle (Pagination) pour récupérer 100% des runs d'un workflow
+    async function fetchAllWorkflowRuns(workflowIdOrFile) {
+      let allRuns = [];
+      let page = 1;
+      let keepFetching = true;
+      const perPage = 100; // Demande le max possible par requête à GitHub
+
+      while (keepFetching) {
+        const url = `https://api.github.com/repos/${GITHUB_USERNAME}/${GITHUB_REPO}/actions/workflows/${workflowIdOrFile}/runs?per_page=${perPage}&page=${page}`;
         const res = await fetch(url);
         
         if (!res.ok) {
-          document.getElementById(successId).innerText = "N/A";
-          document.getElementById(failedId).innerText = "N/A";
-          document.getElementById(rateId).innerText = "N/A";
-          return;
+          break; // S'il y a un problème ou si le dossier n'existe pas, on arrête
         }
 
         const data = await res.json();
         const runs = data.workflow_runs || [];
+
+        if (runs.length === 0) {
+          keepFetching = false;
+          break;
+        }
+
+        allRuns = allRuns.concat(runs);
+
+        // Si on reçoit moins de 100 runs d'un coup, c'est qu'on a atteint la toute fin de l'historique
+        if (runs.length < perPage) {
+          keepFetching = false;
+        } else {
+          page++; // Sinon on passe à la page suivante
+        }
+      }
+      return allRuns;
+    }
+
+    async function processWorkflowStats(workflowIdOrFile, successId, failedId, rateId) {
+      try {
+        // Appelle la fonction de récupération totale
+        const runs = await fetchAllWorkflowRuns(workflowIdOrFile);
 
         if (runs.length === 0) {
           document.getElementById(successId).innerText = "0";
@@ -268,12 +289,9 @@
 
         let successCount = 0;
         let failedCount = 0;
-        let countedRuns = 0;
 
         runs.forEach(run => {
-          // On ne prend en compte que les runs qui ont fini de tourner
           if (run.status === "completed") {
-            countedRuns++;
             if (run.conclusion === "success") {
               successCount++;
             } else if (run.conclusion === "failure") {
@@ -282,7 +300,6 @@
           }
         });
 
-        // Calcul du pourcentage de réussite
         const totalConclusive = successCount + failedCount;
         const rate = totalConclusive > 0 ? Math.round((successCount / totalConclusive) * 100) : 100;
 
@@ -299,7 +316,7 @@
     }
 
     async function updateDashboard() {
-      // 1. Charger le compteur de médias local (donnees.json)
+      // 1. Médias actuels
       try {
         document.getElementById('media-count').innerText = "⏳";
         const res = await fetch('donnees.json', { cache: 'no-store' });
@@ -313,16 +330,23 @@
         document.getElementById('media-count').innerText = "ERR";
       }
 
-      // 2. Lancer l'analyse en parallèle pour les 4 Workflows distincts
+      // Indique le chargement des workflows
+      const ids = ["sync", "pages", "codeql", "dep"];
+      ids.forEach(id => {
+        document.getElementById(`${id}-success`).innerText = "⏳";
+        document.getElementById(`${id}-failed`).innerText = "⏳";
+        document.getElementById(`${id}-rate`).innerText = "⏳";
+      });
+
+      // 2. Lancement des analyses globales en arrière-plan
       await Promise.all([
-        fetchWorkflowStats(WORKFLOW_FILES.sync, "sync-success", "sync-failed", "sync-rate"),
-        fetchWorkflowStats(WORKFLOW_FILES.pages, "pages-success", "pages-failed", "pages-rate"),
-        fetchWorkflowStats(WORKFLOW_FILES.codeql, "codeql-success", "codeql-failed", "codeql-rate"),
-        fetchWorkflowStats(WORKFLOW_FILES.dependabot, "dep-success", "dep-failed", "dep-rate")
+        processWorkflowStats(WORKFLOW_FILES.sync, "sync-success", "sync-failed", "sync-rate"),
+        processWorkflowStats(WORKFLOW_FILES.pages, "pages-success", "pages-failed", "pages-rate"),
+        processWorkflowStats(WORKFLOW_FILES.codeql, "codeql-success", "codeql-failed", "codeql-rate"),
+        processWorkflowStats(WORKFLOW_FILES.dependabot, "dep-success", "dep-failed", "dep-rate")
       ]);
     }
 
-    // Chargement automatique
     window.addEventListener('DOMContentLoaded', updateDashboard);
   </script>
 </body>
