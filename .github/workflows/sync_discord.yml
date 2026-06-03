@@ -2,8 +2,8 @@ name: Sync Discord Media
 
 on:
   schedule:
-    - cron: "0 * * * *"
-  workflow_dispatch:
+    - cron: "0 * * * *" # S'exécute automatiquement TOUTES LES HEURES
+  workflow_dispatch: # Te permet de lancer la synchronisation manuellement depuis GitHub si besoin
 
 permissions:
   contents: write
@@ -43,84 +43,101 @@ jobs:
         run: |
           node <<'NODE'
           const fs = require("node:fs");
+          
+          function getMediaId(url) {
+            if (!url) return null;
+            const parts = url.split('?')[0].split('/');
+            return parts[parts.length - 2] || url;
+          }
+
           const oldData = JSON.parse(fs.readFileSync("donnees.previous.json", "utf8"));
           const newData = JSON.parse(fs.readFileSync("donnees.json", "utf8"));
-          const oldSet = new Set(oldData);
-          const newSet = new Set(newData);
+          
+          const oldMap = new Map();
+          oldData.forEach(url => { const id = getMediaId(url); if(id) oldMap.set(id, url); });
+
+          const newMap = new Map();
+          newData.forEach(url => { const id = getMediaId(url); if(id) newMap.set(id, url); });
 
           let added = 0;
           let removed = 0;
+          let refreshed = 0;
 
-          for (const url of newSet) {
-            if (!oldSet.has(url)) added++;
+          // On cherche les nouveautés ou les rafraîchissements de jetons
+          for (const [id, newUrl] of newMap.entries()) {
+            if (!oldMap.has(id)) {
+              added++;
+            } else {
+              const oldUrl = oldMap.get(id);
+              // Si l'ID est identique mais que l'URL complète a changé, c'est un jeton expirable mis à jour par Discord
+              if (oldUrl !== newUrl) {
+                refreshed++;
+              }
+            }
           }
-          for (const url of oldSet) {
-            if (!newSet.has(url)) removed++;
+          
+          for (const id of oldMap.keys()) {
+            if (!newMap.has(id)) removed++;
           }
 
-          const changed = added + removed;
           const now = new Date();
           const unixTs = Math.floor(now.getTime() / 1000);
 
           fs.appendFileSync(process.env.GITHUB_OUTPUT, `added=${added}\n`);
           fs.appendFileSync(process.env.GITHUB_OUTPUT, `removed=${removed}\n`);
-          fs.appendFileSync(process.env.GITHUB_OUTPUT, `changed=${changed}\n`);
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, `refreshed=${refreshed}\n`);
           fs.appendFileSync(process.env.GITHUB_OUTPUT, `total=${newData.length}\n`);
           fs.appendFileSync(process.env.GITHUB_OUTPUT, `timestamp=${now.toISOString()}\n`);
           fs.appendFileSync(process.env.GITHUB_OUTPUT, `timestamp_unix=${unixTs}\n`);
           NODE
 
-      - name: Notify Discord sync result
-        if: always()
+      - name: Send Discord notification
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          GITHUB_SERVER_URL: ${{ github.server_url }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_RUN_ID: ${{ github.run_id }}
           ADDED: ${{ steps.stats.outputs.added }}
           REMOVED: ${{ steps.stats.outputs.removed }}
-          CHANGED: ${{ steps.stats.outputs.changed }}
+          REFRESHED: ${{ steps.stats.outputs.refreshed }}
           TOTAL: ${{ steps.stats.outputs.total }}
           TIMESTAMP: ${{ steps.stats.outputs.timestamp }}
           TIMESTAMP_UNIX: ${{ steps.stats.outputs.timestamp_unix }}
-          REPO_URL: ${{ github.server_url }}/${{ github.repository }}
-          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-          SITE_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/
         run: |
-          if [ -z "${DISCORD_WEBHOOK_URL}" ]; then
-            echo "DISCORD_WEBHOOK_URL not set, skipping notification."
-            exit 0
-          fi
-
           node <<'NODE'
           const webhookUrl = process.env.DISCORD_WEBHOOK_URL;
-          const added = Number(process.env.ADDED || 0);
-          const removed = Number(process.env.REMOVED || 0);
-          const changed = Number(process.env.CHANGED || 0);
-          const total = Number(process.env.TOTAL || 0);
-          const timestamp = process.env.TIMESTAMP || new Date().toISOString();
-          const unixTs = Number(process.env.TIMESTAMP_UNIX || Math.floor(Date.now() / 1000));
-          const repoUrl = process.env.REPO_URL;
-          const runUrl = process.env.RUN_URL;
-          const siteUrl = process.env.SITE_URL;
+          if (!webhookUrl) {
+            console.log("No webhook URL configured. Skipping notification.");
+            process.exit(0);
+          }
 
-          const color = changed > 0 ? 0x22c55e : 0x6b7280;
-          const statusLabel = changed > 0 ? "Mise a jour detectee" : "Aucun changement";
+          const added = parseInt(process.env.ADDED || "0", 10);
+          const removed = parseInt(process.env.REMOVED || "0", 10);
+          const refreshed = parseInt(process.env.REFRESHED || "0", 10);
+          const total = parseInt(process.env.TOTAL || "0", 10);
+          const timestamp = process.env.TIMESTAMP;
+          const timestampUnix = process.env.TIMESTAMP_UNIX;
+
+          const repoUrl = `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}`;
+          const runUrl = `${repoUrl}/actions/runs/${process.env.GITHUB_RUN_ID}`;
+          const siteUrl = "https://your-github-username.github.io/your-repo-name/"; // Optionnel : Mets ton lien GitHub Pages ici
 
           const payload = {
-            username: "Gallery Sync Bot",
             embeds: [
               {
-                title: "Synchronisation galerie Discord",
-                description: `**${statusLabel}**\n🕒 <t:${unixTs}:F> • <t:${unixTs}:R>`,
-                color,
+                title: "🔄 Synchronisation Galerie Multimédia",
+                color: 0xec4899, // Rose néon cyberpunk
+                description: `La galerie a été mise à jour automatiquement.\n<t:${timestampUnix}:R>`,
                 fields: [
-                  { name: "Changements (X)", value: `**${changed}**`, inline: true },
-                  { name: "Ajoutes", value: String(added), inline: true },
-                  { name: "Supprimes", value: String(removed), inline: true },
-                  { name: "Total medias", value: String(total), inline: true },
-                  { name: "Site", value: `[Ouvrir la galerie](${siteUrl})`, inline: false },
-                  { name: "Workflow run", value: `[Voir l'execution](${runUrl})`, inline: false }
+                  { name: "➕ Ajoutés", value: String(added), inline: true },
+                  { name: "➖ Supprimés", value: String(removed), inline: true },
+                  { name: "🔄 Jetons rafraîchis", value: String(refreshed), inline: true },
+                  { name: "📊 Total médias", value: String(total), inline: true },
+                  { name: "🌐 Site web", value: `[Ouvrir la galerie](${siteUrl})`, inline: false },
+                  { name: "🛠️ GitHub Action", value: `[Voir le rapport de run](${runUrl})`, inline: false }
                 ],
                 footer: {
-                  text: `Repo: ${repoUrl} • UTC: ${timestamp}`
+                  text: `Statut: Réussi • ${timestamp}`
                 }
               }
             ]
@@ -135,7 +152,7 @@ jobs:
               const body = await response.text();
               throw new Error(`Discord webhook error ${response.status}: ${body}`);
             }
-            console.log("Discord notification sent.");
+            console.log("Notification envoyée avec succès sur Discord.");
           }).catch((error) => {
             console.error(error);
             process.exit(1);
@@ -145,12 +162,12 @@ jobs:
       - name: Commit and push updated donnees.json
         run: |
           if git diff --quiet -- donnees.json; then
-            echo "No changes detected in donnees.json"
+            echo "No token changes detected in donnees.json"
             exit 0
           fi
 
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add donnees.json
-          git commit -m "chore: sync discord media data"
+          git commit -m "chore: refresh discord media tokens and history"
           git push
