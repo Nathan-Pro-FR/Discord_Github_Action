@@ -8,7 +8,6 @@ const fs = require("node:fs/promises");
 const path = require("node:path");
 
 const DISCORD_API_BASE = "https://discord.com/api/v10";
-// Sécurité pour éviter une boucle infinie si le salon contient des milliers de messages. 
 // Augmente ce nombre si vous dépassez les 800 messages au total dans le salon.
 const MAX_MESSAGES_TO_FETCH = 800; 
 const OUTPUT_FILE = path.join(__dirname, "donnees.json");
@@ -35,7 +34,6 @@ function isMediaAttachment(attachment) {
   return SUPPORTED_EXTENSIONS.some((ext) => lowerUrl.endsWith(ext));
 }
 
-// Fonction de pagination automatique
 async function fetchAllMessages({ token, channelId }) {
   let allMessages = [];
   let lastMessageId = null;
@@ -46,7 +44,7 @@ async function fetchAllMessages({ token, channelId }) {
   while (keepFetching && allMessages.length < MAX_MESSAGES_TO_FETCH) {
     let endpoint = `${DISCORD_API_BASE}/channels/${channelId}/messages?limit=100`;
     if (lastMessageId) {
-      endpoint += `&before=${lastMessageId}`; // Demande les messages plus anciens que le dernier analysé
+      endpoint += `&before=${lastMessageId}`;
     }
 
     const response = await fetch(endpoint, {
@@ -76,7 +74,7 @@ async function fetchAllMessages({ token, channelId }) {
     console.log(`-> ${allMessages.length} messages récupérés pour analyse...`);
 
     if (messages.length < 100) {
-      keepFetching = false; // On a atteint le tout début du salon
+      keepFetching = false;
     }
   }
 
@@ -93,7 +91,6 @@ function extractMediaUrls(messages) {
     for (const attachment of message.attachments) {
       if (!isMediaAttachment(attachment)) continue;
       
-      // On déduplique par l'ID unique de la pièce jointe Discord
       if (dedupe.has(attachment.id)) continue;
 
       dedupe.add(attachment.id);
