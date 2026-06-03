@@ -226,33 +226,34 @@
 
   <button class="btn-refresh" onclick="updateDashboard()">⚡ Scanner l'Historique Total</button>
   
-  <div class="footer-info">Calcul complet de l'historique par boucle de pagination</div>
+  <div class="footer-info">Calcul complet de l'historique par balayage de l'API</div>
 
   <script>
-    // Configurer avec tes informations exactes
-    const GITHUB_USERNAME = "Nathan-Pro-FR"; // Mets ton pseudo GitHub ici
-    const GITHUB_REPO = "Discord_Github_Action";       // Mets le nom de ton dépôt ici
+    // Configuration automatique via les paramètres de ton dépôt
+    const GITHUB_USERNAME = "Nathan-Pro-FR"; 
+    const GITHUB_REPO = "Discord Github Action";     
 
-    const WORKFLOW_FILES = {
-      sync: "sync_discord.yml",
-      pages: "pages-build-deployment", 
-      codeql: "codeql.yml",            
-      dependabot: "dependabot"         
+    // Mappage des sélecteurs HTML avec des mots-clés présents dans le nom ou le chemin des runs
+    const targets = {
+      sync: { success: "sync-success", failed: "sync-failed", rate: "sync-rate", filter: (run) => run.name === "Sync Discord Media" || run.path.includes("sync_discord.yml") },
+      pages: { success: "pages-success", failed: "pages-failed", rate: "pages-rate", filter: (run) => run.name === "pages-build-deployment" },
+      codeql: { success: "codeql-success", failed: "codeql-failed", rate: "codeql-rate", filter: (run) => run.name.toLowerCase().includes("codeql") || run.path.includes("codeql") },
+      dep: { success: "dep-success", failed: "dep-failed", rate: "dep-rate", filter: (run) => run.name.toLowerCase().includes("dependabot") }
     };
 
-    // Fonction de boucle (Pagination) pour récupérer 100% des runs d'un workflow
-    async function fetchAllWorkflowRuns(workflowIdOrFile) {
+    // Récupère l'intégralité des runs du dépôt à l'aide d'une boucle de pagination propre
+    async function fetchAllRuns() {
       let allRuns = [];
       let page = 1;
       let keepFetching = true;
-      const perPage = 100; // Demande le max possible par requête à GitHub
+      const perPage = 100;
 
       while (keepFetching) {
-        const url = `https://api.github.com/repos/${GITHUB_USERNAME}/${GITHUB_REPO}/actions/workflows/${workflowIdOrFile}/runs?per_page=${perPage}&page=${page}`;
+        const url = `https://api.github.com/repos/${GITHUB_USERNAME}/${GITHUB_REPO}/actions/runs?per_page=${perPage}&page=${page}`;
         const res = await fetch(url);
         
         if (!res.ok) {
-          break; // S'il y a un problème ou si le dossier n'existe pas, on arrête
+          break;
         }
 
         const data = await res.json();
@@ -265,58 +266,17 @@
 
         allRuns = allRuns.concat(runs);
 
-        // Si on reçoit moins de 100 runs d'un coup, c'est qu'on a atteint la toute fin de l'historique
         if (runs.length < perPage) {
           keepFetching = false;
         } else {
-          page++; // Sinon on passe à la page suivante
+          page++;
         }
       }
       return allRuns;
     }
 
-    async function processWorkflowStats(workflowIdOrFile, successId, failedId, rateId) {
-      try {
-        // Appelle la fonction de récupération totale
-        const runs = await fetchAllWorkflowRuns(workflowIdOrFile);
-
-        if (runs.length === 0) {
-          document.getElementById(successId).innerText = "0";
-          document.getElementById(failedId).innerText = "0";
-          document.getElementById(rateId).innerText = "0%";
-          return;
-        }
-
-        let successCount = 0;
-        let failedCount = 0;
-
-        runs.forEach(run => {
-          if (run.status === "completed") {
-            if (run.conclusion === "success") {
-              successCount++;
-            } else if (run.conclusion === "failure") {
-              failedCount++;
-            }
-          }
-        });
-
-        const totalConclusive = successCount + failedCount;
-        const rate = totalConclusive > 0 ? Math.round((successCount / totalConclusive) * 100) : 100;
-
-        document.getElementById(successId).innerText = successCount;
-        document.getElementById(failedId).innerText = failedCount;
-        document.getElementById(rateId).innerText = `${rate}%`;
-
-      } catch (err) {
-        console.error(err);
-        document.getElementById(successId).innerText = "ERR";
-        document.getElementById(failedId).innerText = "ERR";
-        document.getElementById(rateId).innerText = "ERR";
-      }
-    }
-
     async function updateDashboard() {
-      // 1. Médias actuels
+      // 1. Charger le compteur de médias local (donnees.json)
       try {
         document.getElementById('media-count').innerText = "⏳";
         const res = await fetch('donnees.json', { cache: 'no-store' });
@@ -330,21 +290,55 @@
         document.getElementById('media-count').innerText = "ERR";
       }
 
-      // Indique le chargement des workflows
-      const ids = ["sync", "pages", "codeql", "dep"];
-      ids.forEach(id => {
-        document.getElementById(`${id}-success`).innerText = "⏳";
-        document.getElementById(`${id}-failed`).innerText = "⏳";
-        document.getElementById(`${id}-rate`).innerText = "⏳";
+      // Mettre les indicateurs en mode chargement
+      Object.keys(targets).forEach(key => {
+        document.getElementById(targets[key].success).innerText = "⏳";
+        document.getElementById(targets[key].failed).innerText = "⏳";
+        document.getElementById(targets[key].rate).innerText = "⏳";
       });
 
-      // 2. Lancement des analyses globales en arrière-plan
-      await Promise.all([
-        processWorkflowStats(WORKFLOW_FILES.sync, "sync-success", "sync-failed", "sync-rate"),
-        processWorkflowStats(WORKFLOW_FILES.pages, "pages-success", "pages-failed", "pages-rate"),
-        processWorkflowStats(WORKFLOW_FILES.codeql, "codeql-success", "codeql-failed", "codeql-rate"),
-        processWorkflowStats(WORKFLOW_FILES.dependabot, "dep-success", "dep-failed", "dep-rate")
-      ]);
+      try {
+        // 2. Récupérer l'historique complet global en un seul appel paginé
+        const totalRuns = await fetchAllRuns();
+
+        // 3. Trier et calculer les statistiques pour chaque cible directement en JS
+        Object.keys(targets).forEach(key => {
+          const target = targets[key];
+          
+          // On filtre l'historique global pour ne garder que le workflow concerné
+          const filteredRuns = totalRuns.filter(target.filter);
+
+          let successCount = 0;
+          let failedCount = 0;
+
+          filteredRuns.forEach(run => {
+            if (run.status === "completed") {
+              if (run.conclusion === "success") {
+                successCount++;
+              } else if (run.conclusion === "failure") {
+                failedCount++;
+              }
+            }
+          });
+
+          const totalConclusive = successCount + failedCount;
+          
+          // Si le workflow n'a jamais tourné (ex: 0 run), on affiche 100% ou 0% proprement au lieu d'un bug
+          const rate = totalConclusive > 0 ? Math.round((successCount / totalConclusive) * 100) : 100;
+
+          document.getElementById(target.success).innerText = successCount;
+          document.getElementById(target.failed).innerText = failedCount;
+          document.getElementById(target.rate).innerText = totalConclusive > 0 ? `${rate}%` : "0%";
+        });
+
+      } catch (error) {
+        console.error("Erreur lors de l'analyse globale:", error);
+        Object.keys(targets).forEach(key => {
+          document.getElementById(targets[key].success).innerText = "ERR";
+          document.getElementById(targets[key].failed).innerText = "ERR";
+          document.getElementById(targets[key].rate).innerText = "ERR";
+        });
+      }
     }
 
     window.addEventListener('DOMContentLoaded', updateDashboard);
