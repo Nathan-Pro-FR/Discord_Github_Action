@@ -120,7 +120,7 @@ jobs:
 
           const repoUrl = `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}`;
           const runUrl = `${repoUrl}/actions/runs/${process.env.GITHUB_RUN_ID}`;
-          const siteUrl = "https://github.com/Nathan-Pro-FR/Discord_Github_Action"; // Optionnel : Remplace par le lien final de ton site si tu veux
+          const siteUrl = "https://Nathan-Pro-FR.github.io/Discord_Github_Action/"; // Optionnel : Remplace par le lien final de ton site si tu veux
 
           const payload = {
             username: "Gallery Sync Bot",
