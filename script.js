@@ -1,5 +1,8 @@
 document.addEventListener("DOMContentLoaded", () => {
   const galleryGrid = document.getElementById("gallery-grid");
+  const modal = document.getElementById("media-modal");
+  const modalContent = modal ? modal.querySelector(".modal-content") : null;
+  const modalClose = modal ? modal.querySelector(".modal-close") : null;
 
   if (!galleryGrid) return;
 
@@ -65,7 +68,62 @@ document.addEventListener("DOMContentLoaded", () => {
     const mediaElement = createMediaElement(url);
     card.appendChild(mediaElement);
     galleryGrid.appendChild(card);
+
+    // Événement au clic pour agrandir le média
+    mediaElement.addEventListener("click", () => {
+      if (!modal || !modalContent) return;
+
+      // On vide le contenu précédent de la modale
+      modalContent.innerHTML = "";
+
+      // On clone le média pour l'afficher dans la modale
+      const clonedMedia = mediaElement.cloneNode(true);
+      clonedMedia.className = "modal-media";
+      
+      // Si c'est une vidéo, on s'assure que les contrôles fonctionnent et on force la lecture
+      if (clonedMedia.tagName === "VIDEO") {
+        clonedMedia.controls = true;
+        clonedMedia.autoplay = true;
+      }
+
+      modalContent.appendChild(clonedMedia);
+      modal.classList.add("active");
+      modal.setAttribute("aria-hidden", "false");
+      document.body.style.overflow = "hidden"; // Empêche le scroll en arrière-plan
+    });
   };
+
+  // Fonctions de fermeture de la modale
+  const closeModal = () => {
+    if (!modal) return;
+    modal.classList.remove("active");
+    modal.setAttribute("aria-hidden", "true");
+    document.body.style.overflow = ""; // Rétablit le scroll
+    
+    // Si c'était une vidéo, on la coupe au moment de fermer
+    if (modalContent) {
+      const video = modalContent.querySelector("video");
+      if (video) video.pause();
+      modalContent.innerHTML = "";
+    }
+  };
+
+  if (modalClose) modalClose.addEventListener("click", closeModal);
+  if (modal) {
+    modal.addEventListener("click", (e) => {
+      // Ferme si on clique sur le fond de la modale, pas sur le média lui-même
+      if (e.target === modal || e.target.classList.contains("modal-content")) {
+        closeModal();
+      }
+    });
+  }
+
+  // Fermeture avec la touche Échap
+  window.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && modal && modal.classList.contains("active")) {
+      closeModal();
+    }
+  });
 
   const loadGallery = async () => {
     try {
