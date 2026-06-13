@@ -8,8 +8,8 @@ const fs = require("node:fs/promises");
 const path = require("node:path");
 
 const DISCORD_API_BASE = "https://discord.com/api/v10";
-// Augmente ce nombre si vous dépassez les 800 messages au total dans le salon.
-const MAX_MESSAGES_TO_FETCH = 800; 
+// Augmente ce nombre si vous dépassez les ~~800~~ 1500 messages au total dans le salon.
+const MAX_MESSAGES_TO_FETCH = 1500; 
 const OUTPUT_FILE = path.join(__dirname, "donnees.json");
 
 const SUPPORTED_MIME_PREFIXES = ["image/", "video/"];
