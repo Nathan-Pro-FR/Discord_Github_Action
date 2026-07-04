@@ -83,6 +83,14 @@ Discord_Github_Action/
 ├── css/
 │   └── style.css
 │
+├── image/
+│   ├── android-chrome-192x192.png
+│   ├── android-chrome-512x512.png
+│   ├── apple-touch-icon.png
+│   ├── favicon-16x16.png
+│   ├── favicon-32x32.png
+│   └── favicon.ico
+│
 ├── docs/
 │   ├── architecture/
 │   │   ├── ARCHITECTURE.fr.md
@@ -91,7 +99,7 @@ Discord_Github_Action/
 │   └── readme/
 │       ├── README.pro.fr.md
 │       └── README.pro.md
-│   
+│
 ├── dashboard.html
 ├── donnees.json
 ├── index.html
