@@ -1,0 +1,21 @@
+{
+    "name": "Cyberpunk Discord Gallery",
+    "short_name": "CyberGallery",
+    "description": "Galerie multimédia Cyberpunk synchronisée avec Discord.",
+    "start_url": "./index.html",
+    "display": "standalone",
+    "background_color": "#0d0e15",
+    "theme_color": "#ff007f",
+    "icons": [
+        {
+            "src": "/android-chrome-192x192.png", 
+            "sizes": "192x192", 
+            "type": "image/png"
+        },
+        {
+            "src": "/android-chrome-512x512.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ]
+}
