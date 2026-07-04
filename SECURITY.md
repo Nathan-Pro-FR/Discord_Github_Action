@@ -15,7 +15,7 @@ This repository contains:
 
 - A static frontend deployed on GitHub Pages
 - A GitHub Actions workflow to sync media data
-- A Node.js script using Discord API credentials (`DISCORD_TOKEN`, `CHANNEL_ID`)
+- A Node.js script using Discord API credentials (`DISCORD_TOKEN`, `CHANNEL_ID`, `DISCORD_WEBHOOK_URL`)
 
 The most sensitive assets are secrets/tokens and workflow integrity.
 
@@ -52,7 +52,7 @@ Please include:
 ## Secret Handling Policy
 
 - Never commit bot tokens, API keys, or credentials.
-- Use **GitHub Actions Secrets** only (`DISCORD_TOKEN`, `CHANNEL_ID`).
+- Use **GitHub Actions Secrets** only (`DISCORD_TOKEN`, `CHANNEL_ID`, `DISCORD_WEBHOOK_URL`).
 - If a secret is exposed:
   1. Revoke/rotate it immediately (Discord Developer Portal)
   2. Update GitHub Secrets

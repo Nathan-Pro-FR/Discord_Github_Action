@@ -4,6 +4,10 @@ Une galerie media legere au style Cyberpunk / Dark Neon, synchronisee automatiqu
 
 🇬🇧 Version anglaise : [`README.md`](README.md)
 
+📐 Architecture : [`ARCHITECTURE.md`](ARCHITECTURE.md)
+
+🧾 Documentation professionnelle : [`README.pro.fr.md`](README.pro.fr.md)
+
 ![Node.js](https://img.shields.io/badge/Node.js-18%2B-3C873A?logo=node.js&logoColor=white)
 ![GitHub Actions](https://img.shields.io/badge/GitHub%20Actions-Automatis%C3%A9-2088FF?logo=github-actions&logoColor=white)
 ![GitHub Pages](https://img.shields.io/badge/Deploy-GitHub%20Pages-121013?logo=github&logoColor=white)
@@ -31,6 +35,7 @@ Une galerie media legere au style Cyberpunk / Dark Neon, synchronisee automatiqu
 3. Ajouter les secrets GitHub du depot :
    - `DISCORD_TOKEN`
    - `CHANNEL_ID`
+   - `DISCORD_WEBHOOK_URL` (optionnel, pour les notifications Discord)
 4. Activer GitHub Pages (`Settings` -> `Pages`, branche `main`, dossier `/`).
 5. Lancer une fois le workflow manuellement depuis l'onglet Actions.
 
@@ -46,11 +51,13 @@ Tu dois les ajouter dans les **Secrets GitHub Actions** de ton depot (et nulle p
 2. Va dans `Settings`.
 3. Clique `Secrets and variables` -> `Actions`.
 4. Clique `New repository secret`.
-5. Cree ces 2 secrets :
+5. Cree ces 3 secrets :
    - **Name**: `DISCORD_TOKEN`  
      **Secret**: le token de ton bot Discord
    - **Name**: `CHANNEL_ID`  
      **Secret**: l'identifiant du salon Discord
+   - **Name**: `DISCORD_WEBHOOK_URL`  
+     **Secret**: l'URL du webhook Discord pour les notifications (optionnel)
 6. Lance le workflow `Sync Discord Media` manuellement une premiere fois depuis l'onglet `Actions`.
 
 ### Important
@@ -59,6 +66,7 @@ Tu dois les ajouter dans les **Secrets GitHub Actions** de ton depot (et nulle p
 - Le workflow les lit automatiquement via :
   - `${{ secrets.DISCORD_TOKEN }}`
   - `${{ secrets.CHANNEL_ID }}`
+  - `${{ secrets.DISCORD_WEBHOOK_URL }}` (optionnel)
 - En cas de fuite du token, regenere-le immediatement dans Discord Developer Portal.
 
 ## Apercu visuel
@@ -78,7 +86,7 @@ Puis insere dans le README :
 ## Fonctionnement
 
 1. `.github/workflows/sync_discord.yml` se lance (cron + manuel).
-2. `recupere_medias.js` recupere les 50 derniers messages du salon.
+2. `recupere_medias.js` recupere les 1800 derniers messages du salon.
 3. Le script filtre les pieces jointes image/video et reecrit `donnees.json`.
 4. `script.js` charge ce JSON et cree dynamiquement les cartes media.
 
@@ -110,6 +118,7 @@ Sous PowerShell :
 ```powershell
 $env:DISCORD_TOKEN="ton_token"
 $env:CHANNEL_ID="ton_channel_id"
+$env:DISCORD_WEBHOOK_URL="ton_webhook"
 npm run sync
 ```
 

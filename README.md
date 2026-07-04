@@ -4,6 +4,10 @@ A lightweight Cyberpunk / Dark Neon media gallery powered by Discord + GitHub Ac
 
 🇫🇷 French version: [`README.fr.md`](README.fr.md)
 
+📐 Architecture: [`ARCHITECTURE.md`](ARCHITECTURE.md)
+
+🧾 Professional docs: [`README.pro.md`](README.pro.md)
+
 ![Node.js](https://img.shields.io/badge/Node.js-18%2B-3C873A?logo=node.js&logoColor=white)
 ![GitHub Actions](https://img.shields.io/badge/GitHub%20Actions-Automated-2088FF?logo=github-actions&logoColor=white)
 ![GitHub Pages](https://img.shields.io/badge/Deploy-GitHub%20Pages-121013?logo=github&logoColor=white)
@@ -31,6 +35,7 @@ A lightweight Cyberpunk / Dark Neon media gallery powered by Discord + GitHub Ac
 3. Add repository secrets:
    - `DISCORD_TOKEN`
    - `CHANNEL_ID`
+   - `DISCORD_WEBHOOK_URL` (optional, for Discord notifications)
 4. Enable GitHub Pages (`Settings` -> `Pages`, branch: `main`, folder: `/`).
 5. Run the workflow manually once from the Actions tab.
 
@@ -46,11 +51,13 @@ You must add them in your repository **GitHub Actions Secrets** (and nowhere els
 2. Go to `Settings`.
 3. Click `Secrets and variables` -> `Actions`.
 4. Click `New repository secret`.
-5. Create these 2 secrets:
+5. Create these 3 secrets:
    - **Name**: `DISCORD_TOKEN`  
      **Secret**: your Discord bot token
    - **Name**: `CHANNEL_ID`  
      **Secret**: your Discord channel ID
+   - **Name**: `DISCORD_WEBHOOK_URL`  
+     **Secret**: your Discord webhook URL for notifications (optional)
 6. Run the `Sync Discord Media` workflow manually once from the `Actions` tab.
 
 ### Important
@@ -59,6 +66,7 @@ You must add them in your repository **GitHub Actions Secrets** (and nowhere els
 - The workflow reads them automatically via:
   - `${{ secrets.DISCORD_TOKEN }}`
   - `${{ secrets.CHANNEL_ID }}`
+  - `${{ secrets.DISCORD_WEBHOOK_URL }}` (optional)
 - If the token is leaked, rotate it immediately from Discord Developer Portal.
 
 ## Preview
