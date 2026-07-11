@@ -1,8 +1,7 @@
 /**
  * Service Worker - Cyberpunk Discord Gallery
- * Stratégie : cache-first pour le shell (HTML/CSS/JS/icônes),
- * network-first pour donnees.json (toujours avoir les derniers médias),
- * fallback offline propre si tout échoue.
+ * Stratégie : cache-first (stale-while-revalidate) pour le shell,
+ * network-first pour donnees.json (toujours avoir les derniers médias).
  */
 
 const CACHE_VERSION = "v1";
@@ -21,7 +20,7 @@ const SHELL_ASSETS = [
   "./image/favicon.ico",
 ];
 
-// --- INSTALL : on met en cache le "shell" de l'app ---
+// --- INSTALL ---
 self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(SHELL_CACHE).then((cache) => cache.addAll(SHELL_ASSETS))
@@ -29,7 +28,7 @@ self.addEventListener("install", (event) => {
   self.skipWaiting();
 });
 
-// --- ACTIVATE : on nettoie les vieux caches ---
+// --- ACTIVATE ---
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
@@ -48,19 +47,20 @@ self.addEventListener("fetch", (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
-  // Seulement le même origine (on ne touche pas aux médias Discord CDN externes)
+  // Seulement le même origine
   if (url.origin !== self.location.origin) {
     return;
   }
 
-  // donnees.json : network-first (on veut les médias les plus frais),
-  // avec repli sur le cache si hors-ligne
+  // 1. donnees.json : Network-First
   if (url.pathname.endsWith("donnees.json")) {
     event.respondWith(
       fetch(request)
         .then((response) => {
-          const clone = response.clone();
-          caches.open(DATA_CACHE).then((cache) => cache.put(request, clone));
+          if (response.ok) {
+            const clone = response.clone();
+            caches.open(DATA_CACHE).then((cache) => cache.put(request, clone));
+          }
           return response;
         })
         .catch(() => caches.match(request))
@@ -68,20 +68,28 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Reste du shell : cache-first, avec mise à jour silencieuse en arrière-plan
+  // 2. Reste du shell : Cache-First avec mise à jour en arrière-plan (Stale-While-Revalidate)
   event.respondWith(
-    caches.match(request).then((cached) => {
-      const networkFetch = fetch(request)
-        .then((response) => {
-          if (response && response.ok) {
-            const clone = response.clone();
-            caches.open(SHELL_CACHE).then((cache) => cache.put(request, clone));
-          }
-          return response;
-        })
-        .catch(() => cached);
+    caches.match(request).then((cachedResponse) => {
+      // On lance la requête réseau pour mettre à jour le cache
+      const fetchPromise = fetch(request).then((networkResponse) => {
+        if (networkResponse && networkResponse.ok) {
+          const clone = networkResponse.clone();
+          caches.open(SHELL_CACHE).then((cache) => cache.put(request, clone));
+        }
+        return networkResponse;
+      }).catch(() => {
+        // Optionnel : échec silencieux du réseau en arrière-plan
+      });
 
-      return cached || networkFetch;
+      // Si on l'a en cache, on le renvoie TOUT DE SUITE. 
+      // On utilise event.waitUntil si disponible (selon les contextes) pour laisser le temps au fetch de finir
+      if (cachedResponse) {
+        return cachedResponse;
+      }
+
+      // Sinon, on attend le réseau
+      return fetchPromise;
     })
   );
 });
