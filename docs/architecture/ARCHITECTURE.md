@@ -76,20 +76,12 @@ Each string represents one media URL to be displayed by the frontend.
 ```text
 Discord_Github_Action/
 ├── .github/
-│   ├── dependabot.yml
-│   └── workflows/
-│       └── sync_discord.yml
+│   ├── workflows/
+│   │   └── sync_discord.yml
+│   └── dependabot.yml
 │
 ├── css/
 │   └── style.css
-│
-├── image/
-│   ├── android-chrome-192x192.png
-│   ├── android-chrome-512x512.png
-│   ├── apple-touch-icon.png
-│   ├── favicon-16x16.png
-│   ├── favicon-32x32.png
-│   └── favicon.ico
 │
 ├── docs/
 │   ├── architecture/
@@ -100,16 +92,27 @@ Discord_Github_Action/
 │       ├── README.pro.fr.md
 │       └── README.pro.md
 │
+├── image/
+│   ├── android-chrome-192x192.png
+│   ├── android-chrome-512x512.png
+│   ├── apple-touch-icon.png
+│   ├── favicon-16x16.png
+│   ├── favicon-32x32.png
+│   └── favicon.ico
+│
+├── .gitignore
+├── LICENSE
+├── README.fr.md
+├── README.md
+├── SECURITY.md
 ├── dashboard.html
 ├── donnees.json
 ├── index.html
-├── LICENSE
+├── manifest.json
 ├── package.json
-├── README.fr.md
-├── README.md
 ├── recupere_medias.js
 ├── script.js
-└── SECURITY.md
+└── sw.js
 ```
 
 ## 8. 📝 Notes
