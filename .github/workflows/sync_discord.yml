@@ -2,7 +2,7 @@ name: Sync Discord Media
 
 on:
   schedule:
-    - cron: "0 * * * *" # S'exécute automatiquement TOUTES LES HEURES
+    - cron: "0 */12 * * *" # S'exécute automatiquement TOUTES LES 12 HEURES
   workflow_dispatch: # Te permet de lancer la synchronisation manuellement depuis GitHub si besoin
 
 permissions:
