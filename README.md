@@ -8,7 +8,7 @@ A lightweight Cyberpunk / Dark Neon media gallery powered by Discord + GitHub Ac
 
 🧾 Professional docs: [`README.pro.md`](README.pro.md)
 
-![Node.js](https://img.shields.io/badge/Node.js-18%2B-3C873A?logo=node.js&logoColor=white)
+![Node.js](https://img.shields.io/badge/Node.js-22%2B-3C873A?logo=node.js&logoColor=white)
 ![GitHub Actions](https://img.shields.io/badge/GitHub%20Actions-Automated-2088FF?logo=github-actions&logoColor=white)
 ![GitHub Pages](https://img.shields.io/badge/Deploy-GitHub%20Pages-121013?logo=github&logoColor=white)
 ![Style](https://img.shields.io/badge/Theme-Cyberpunk%20Dark%20Neon-ec4899)
