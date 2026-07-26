@@ -77,6 +77,7 @@ Dans les paramètres du dépôt GitHub, ajoutez :
 - DISCORD_TOKEN
 - CHANNEL_ID
 - DISCORD_WEBHOOK_URL (optionnel)
+- - DISCORD_USER_ID (optionnel)
 
 ### 5. Lancer le workflow
 
@@ -90,6 +91,7 @@ Ouvre l’onglet Actions et exécute une première fois le workflow manuellement
    - DISCORD_TOKEN
    - CHANNEL_ID
    - DISCORD_WEBHOOK_URL
+   - DISCORD_USER_ID
 4. Active GitHub Pages pour le dépôt.
 5. Lance une fois le workflow manuellement pour initialiser la galerie.
 
