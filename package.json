@@ -5,7 +5,10 @@
   "description": "Galerie multimedia legere synchronisee depuis un salon Discord via GitHub Actions.",
   "main": "recupere_medias.js",
   "scripts": {
-    "sync": "node recupere_medias.js"
+    "sync": "node recupere_medias.js",
+    "stats": "node calcul_stats.js",
+    "webhook": "node envoi_webhook.js",
+    "notify-error": "node notif_erreur_mp.js"
   },
   "engines": {
     "node": ">=18"

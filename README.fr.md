@@ -16,26 +16,29 @@ Une galerie media legere au style Cyberpunk / Dark Neon, synchronisee automatiqu
 ## Points forts
 
 - Synchronisation automatique des medias toutes les heures
-- Declenchement manuel possible depuis GitHub Actions
-- Prise en charge des images et des videos
-- Aucun serveur backend a maintenir (site statique)
-- Front rapide et simple base sur `donnees.json`
+- Déclenchement manuel possible depuis GitHub Actions
+- Prise en charge des images et des vidéos
+- Aucun serveur backend à maintenir (site statique)
+- Front rapide et simple basé sur `donnees.json`
+- Workflow robuste avec statistiques, notifications Discord et alertes en cas d’échec
 
 ## Stack technique
 
 - **Frontend** : HTML, CSS, JavaScript natif
 - **Script de synchro** : Node.js 18+ (`recupere_medias.js`)
 - **Automatisation** : GitHub Actions
-- **Hebergement** : GitHub Pages
+- **Scripts de notification** : `calcul_stats.js`, `envoi_webhook.js`, `notif_erreur_mp.js`
+- **Hébergement** : GitHub Pages
 
 ## Demarrage rapide
 
 1. Forker ou cloner le depot.
 2. Creer un bot Discord et l'ajouter sur ton serveur.
-3. Ajouter les secrets GitHub du depot :
+3. Ajouter les secrets GitHub du dépôt :
    - `DISCORD_TOKEN`
    - `CHANNEL_ID`
    - `DISCORD_WEBHOOK_URL` (optionnel, pour les notifications Discord)
+   - `DISCORD_USER_ID` (optionnel, pour les alertes privées en cas d’échec)
 4. Activer GitHub Pages (`Settings` -> `Pages`, branche `main`, dossier `/`).
 5. Lancer une fois le workflow manuellement depuis l'onglet Actions.
 
@@ -51,14 +54,16 @@ Tu dois les ajouter dans les **Secrets GitHub Actions** de ton depot (et nulle p
 2. Va dans `Settings`.
 3. Clique `Secrets and variables` -> `Actions`.
 4. Clique `New repository secret`.
-5. Cree ces 3 secrets :
+5. Crée ces 4 secrets :
    - **Name**: `DISCORD_TOKEN`  
      **Secret**: le token de ton bot Discord
    - **Name**: `CHANNEL_ID`  
      **Secret**: l'identifiant du salon Discord
    - **Name**: `DISCORD_WEBHOOK_URL`  
      **Secret**: l'URL du webhook Discord pour les notifications (optionnel)
-6. Lance le workflow `Sync Discord Media` manuellement une premiere fois depuis l'onglet `Actions`.
+   - **Name**: `DISCORD_USER_ID`
+     **Secret**: l'identifiant Discord de l'utilisateur qui recevra les alertes privées (optionnel)
+6. Lance le workflow `Sync Discord Media` manuellement une première fois depuis l'onglet `Actions`.
 
 ### Important
 
@@ -85,19 +90,25 @@ Puis insere dans le README :
 
 ## Fonctionnement
 
-1. `.github/workflows/sync_discord.yml` se lance (cron + manuel).
-2. `recupere_medias.js` recupere les 1800 derniers messages du salon.
-3. Le script filtre les pieces jointes image/video et reecrit `donnees.json`.
-4. `script.js` charge ce JSON et cree dynamiquement les cartes media.
+1. `.github/workflows/sync_discord.yml` se lance selon un planning et manuellement.
+2. `recupere_medias.js` récupère les messages récents du salon Discord configuré.
+3. Le script filtre les pièces jointes image/video et réécrit `donnees.json`.
+4. `calcul_stats.js` compare l’ancien et le nouveau jeu de données pour calculer les ajouts, suppressions, rafraîchissements et le total.
+5. `envoi_webhook.js` envoie une notification Discord sous forme d’embed avec le résumé de synchronisation.
+6. Si le workflow échoue, `notif_erreur_mp.js` peut envoyer un message privé Discord à l’utilisateur configuré.
+7. `script.js` charge ce JSON et crée dynamiquement les cartes média.
 
 ## Structure du projet
 
 - `index.html` - structure de la page
 - `script.js` - logique d'affichage et fallback media
-- `css/style.css` - theme visuel Cyberpunk / Dark Neon
-- `recupere_medias.js` - collecte des medias depuis Discord
-- `donnees.json` - liste des URLs generees
-- `.github/workflows/sync_discord.yml` - synchro auto + commit auto
+- `css/style.css` - thème visuel Cyberpunk / Dark Neon
+- `recupere_medias.js` - collecte des médias depuis Discord
+- `calcul_stats.js` - compare les anciennes et nouvelles listes de médias
+- `envoi_webhook.js` - envoie les notifications Discord via webhook
+- `notif_erreur_mp.js` - envoie une alerte privée Discord en cas d’échec
+- `donnees.json` - liste des URLs générées
+- `.github/workflows/sync_discord.yml` - synchronisation automatique, notifications et commit auto
 
 ## Lancement local (optionnel)
 
@@ -128,6 +139,8 @@ Pour le salon cible :
 
 - `View Channel`
 - `Read Message History`
+
+Pour l’alerte par message privé, le bot doit également pouvoir créer des conversations privées avec l’utilisateur cible.
 
 ## Securite
 

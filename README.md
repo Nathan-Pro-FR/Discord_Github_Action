@@ -20,12 +20,14 @@ A lightweight Cyberpunk / Dark Neon media gallery powered by Discord + GitHub Ac
 - Supports images and videos
 - Zero backend hosting cost (static site on GitHub Pages)
 - Fast frontend rendering from a simple `donnees.json`
+- Robust workflow with stats, Discord webhook notifications, and failure alerts
 
 ## Tech Stack
 
 - **Frontend**: HTML, CSS (Cyberpunk theme), Vanilla JS
 - **Sync Script**: Node.js 18+ (`recupere_medias.js`)
 - **Automation**: GitHub Actions
+- **Notification Scripts**: `calcul_stats.js`, `envoi_webhook.js`, `notif_erreur_mp.js`
 - **Hosting**: GitHub Pages
 
 ## Quick Start
@@ -36,6 +38,7 @@ A lightweight Cyberpunk / Dark Neon media gallery powered by Discord + GitHub Ac
    - `DISCORD_TOKEN`
    - `CHANNEL_ID`
    - `DISCORD_WEBHOOK_URL` (optional, for Discord notifications)
+   - `DISCORD_USER_ID` (optional, for private failure alerts)
 4. Enable GitHub Pages (`Settings` -> `Pages`, branch: `main`, folder: `/`).
 5. Run the workflow manually once from the Actions tab.
 
@@ -51,13 +54,15 @@ You must add them in your repository **GitHub Actions Secrets** (and nowhere els
 2. Go to `Settings`.
 3. Click `Secrets and variables` -> `Actions`.
 4. Click `New repository secret`.
-5. Create these 3 secrets:
+5. Create these 4 secrets:
    - **Name**: `DISCORD_TOKEN`  
      **Secret**: your Discord bot token
    - **Name**: `CHANNEL_ID`  
      **Secret**: your Discord channel ID
    - **Name**: `DISCORD_WEBHOOK_URL`  
      **Secret**: your Discord webhook URL for notifications (optional)
+   - **Name**: `DISCORD_USER_ID`
+     **Secret**: your Discord user ID for private failure alerts (optional)
 6. Run the `Sync Discord Media` workflow manually once from the `Actions` tab.
 
 ### Important
@@ -85,10 +90,13 @@ Then use:
 
 ## How It Works
 
-1. `.github/workflows/sync_discord.yml` triggers on schedule and manual dispatch.
-2. `recupere_medias.js` fetches the last 50 Discord messages from your channel.
-3. It extracts only media attachments (image/video), then rewrites `donnees.json`.
-4. The frontend loads `donnees.json` and creates media cards dynamically.
+1. `.github/workflows/sync_discord.yml` triggers on a schedule and manual dispatch.
+2. `recupere_medias.js` fetches recent Discord messages from the configured channel.
+3. It extracts media attachments (images/videos) and rewrites `donnees.json`.
+4. `calcul_stats.js` compares the previous and current datasets to compute added, removed, refreshed, and total media counts.
+5. `envoi_webhook.js` sends a Discord embed notification with the sync summary.
+6. If the workflow fails, `notif_erreur_mp.js` can send a private Discord message to the configured user.
+7. The frontend loads `donnees.json` and renders the gallery dynamically.
 
 ## Project Structure
 
@@ -96,8 +104,11 @@ Then use:
 - `script.js` - loads media list, renders `<img>` / `<video>`, handles fallback
 - `css/style.css` - Dark Neon visual identity and responsive grid
 - `recupere_medias.js` - Discord API collector and JSON generator
+- `calcul_stats.js` - compares old and new media lists to produce sync metrics
+- `envoi_webhook.js` - sends Discord webhook notifications
+- `notif_erreur_mp.js` - sends a private Discord alert on workflow failure
 - `donnees.json` - generated media URL list
-- `.github/workflows/sync_discord.yml` - scheduled sync + auto-commit
+- `.github/workflows/sync_discord.yml` - scheduled sync, notifications, and auto-commit
 - `README.fr.md` - complete French documentation
 
 ## Local Run (Optional)
@@ -128,6 +139,8 @@ Grant your bot the minimum required permissions on the target channel:
 
 - `View Channel`
 - `Read Message History`
+
+If you want the failure alert feature to work, your bot must also be able to open direct messages with the target user.
 
 ## Security Notes
 
