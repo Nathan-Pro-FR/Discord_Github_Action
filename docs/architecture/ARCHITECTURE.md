@@ -105,10 +105,13 @@ Discord_Github_Action/
 ├── README.fr.md
 ├── README.md
 ├── SECURITY.md
+├── calcul_stats.js (new)
 ├── dashboard.html
 ├── donnees.json
+├── envoi_webhook.js (new)
 ├── index.html
 ├── manifest.json
+├── notif_erreur_mp.js (new) 
 ├── package.json
 ├── recupere_medias.js
 ├── script.js
