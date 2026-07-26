@@ -77,6 +77,7 @@ In GitHub, open your repository settings and add:
 - DISCORD_TOKEN
 - CHANNEL_ID
 - DISCORD_WEBHOOK_URL (optional)
+- DISCORD_USER_ID (optional)
 
 ### 5. Run the workflow
 
@@ -90,6 +91,7 @@ Go to the Actions tab and run the workflow manually once. After that, the galler
    - DISCORD_TOKEN
    - CHANNEL_ID
    - DISCORD_WEBHOOK_URL
+   - DISCORD_USER_ID
 4. Enable GitHub Pages for the repository.
 5. Run the workflow once manually to initialize the gallery.
 
