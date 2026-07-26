@@ -25,7 +25,7 @@ Une galerie media legere au style Cyberpunk / Dark Neon, synchronisee automatiqu
 ## Stack technique
 
 - **Frontend** : HTML, CSS, JavaScript natif
-- **Script de synchro** : Node.js 18+ (`recupere_medias.js`)
+- **Script de synchro** : Node.js 22+ (`recupere_medias.js`)
 - **Automatisation** : GitHub Actions
 - **Scripts de notification** : `calcul_stats.js`, `envoi_webhook.js`, `notif_erreur_mp.js`
 - **Hébergement** : GitHub Pages
