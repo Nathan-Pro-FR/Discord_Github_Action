@@ -12,6 +12,7 @@ A lightweight Cyberpunk / Dark Neon media gallery powered by Discord + GitHub Ac
 ![GitHub Actions](https://img.shields.io/badge/GitHub%20Actions-Automated-2088FF?logo=github-actions&logoColor=white)
 ![GitHub Pages](https://img.shields.io/badge/Deploy-GitHub%20Pages-121013?logo=github&logoColor=white)
 ![Style](https://img.shields.io/badge/Theme-Cyberpunk%20Dark%20Neon-ec4899)
+[GitHub Skills](https://skills.github.com/)
 
 ## Highlights
 
