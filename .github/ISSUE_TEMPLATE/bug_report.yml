@@ -1,0 +1,58 @@
+name: Signalement de bug
+description: Signaler un problème ou un dysfonctionnement
+title: "[BUG]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Merci de prendre le temps de signaler ce problème !
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description du bug
+      description: Une description claire et concise de ce qui ne fonctionne pas.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Étapes pour reproduire
+      description: Comment déclencher ce bug ?
+      placeholder: |
+        1. Aller sur '...'
+        2. Clic sur '...'
+        3. Voir l'erreur
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Comportement attendu
+      description: Que devrait-il se passer normalement ?
+    validations:
+      required: true
+
+  - type: dropdown
+    id: environment
+    attributes:
+      label: OS / Environnement
+      options:
+        - Windows
+        - macOS
+        - Linux
+        - iOS / Android
+        - Autre
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Vérifications
+      options:
+        - label: J'ai vérifié qu'aucun autre ticket similaire n'est déjà ouvert.
+          required: true
